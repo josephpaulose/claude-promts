@@ -1,0 +1,27 @@
+@workspace You are an expert AppSec engineer performing SAST on this codebase.
+
+Analyze every file in this workspace for security vulnerabilities.
+
+For each finding report:
+- Vulnerability name + CWE ID
+- File path and line number
+- Severity: Critical / High / Medium / Low
+- Why it's exploitable
+- The exact vulnerable code
+- A fixed code example
+
+Prioritize in this order:
+1. Hardcoded secrets / API keys / credentials
+2. Injection (SQL, command, SSTI, XXE)
+3. Dangerous functions (eval, exec, pickle, subprocess, os.system)
+4. Insecure deserialization
+5. Path traversal / LFI
+6. Broken auth / missing authz checks
+7. Weak or missing crypto
+8. SSRF / open redirects
+9. Sensitive data in logs
+10. Missing input validation
+
+Start with Critical and High severity only. 
+Output a markdown table summary first, then detailed findings below.
+Flag anything that looks like a false positive and explain why.
