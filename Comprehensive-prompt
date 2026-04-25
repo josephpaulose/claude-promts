@@ -1,0 +1,153 @@
+@workspace You are a world-class AppSec engineer and red team researcher performing an exhaustive, comprehensive SAST audit on this entire codebase. Leave nothing unchecked.
+
+Analyze EVERY file — source code, configs, scripts, Dockerfiles, IaC, CI/CD pipelines, dependency files, and documentation.
+
+---
+
+## REPORTING FORMAT
+
+For each finding:
+- **Vulnerability**: Name + CWE ID + OWASP category
+- **ATT&CK TTP**: Mapped MITRE ATT&CK technique ID and name
+- **File & Line**: Exact path and line number
+- **Severity**: Critical / High / Medium / Low / Informational
+- **CVSS v3 Score**: Estimated base score
+- **Exploitability**: How an attacker would exploit this
+- **Vulnerable Code**: Exact snippet
+- **Fixed Code**: Working remediation example
+- **False Positive Assessment**: Likelihood and reasoning
+
+---
+
+## SCAN SCOPE — analyze ALL of the following:
+
+### 1. SECRETS & CREDENTIALS
+- Hardcoded API keys, passwords, tokens, private keys
+- Base64 encoded secrets
+- Secrets in environment variables, .env files, config files
+- AWS/GCP/Azure credentials, JWT secrets
+- SSH private keys, PEM files
+- Database connection strings with credentials
+
+### 2. INJECTION VULNERABILITIES
+- SQL injection (raw queries, ORM misuse, second-order SQLi)
+- Command injection (os.system, subprocess, shell=True)
+- SSTI (template injection in Jinja2, Mako, etc.)
+- XXE (XML external entity)
+- LDAP injection
+- XPath injection
+- NoSQL injection (MongoDB, etc.)
+- HTTP header injection
+- Log injection / log forging
+- CRLF injection
+
+### 3. DANGEROUS FUNCTIONS & SINKS
+- eval(), exec(), compile()
+- pickle, marshal, shelve, yaml.load()
+- subprocess with shell=True
+- os.system(), os.popen()
+- __import__(), importlib misuse
+- ctypes, cffi unsafe usage
+- open() with user-controlled paths
+
+### 4. AUTHENTICATION & AUTHORIZATION
+- Missing authentication on endpoints
+- Broken access control / IDOR
+- Privilege escalation paths
+- JWT: none algorithm, weak secret, missing expiry
+- OAuth misconfigurations
+- Session fixation / missing session invalidation
+- Insecure remember-me tokens
+- Mass assignment vulnerabilities
+
+### 5. CRYPTOGRAPHY
+- Weak algorithms (MD5, SHA1, DES, RC4, ECB mode)
+- Hardcoded IV or salt
+- Insecure random (random vs secrets/os.urandom)
+- Missing certificate validation (verify=False)
+- Weak key sizes
+- Improper padding
+
+### 6. INSECURE DESERIALIZATION
+- pickle.loads() on untrusted input
+- yaml.load() without SafeLoader
+- jsonpickle misuse
+- Java deserialization equivalents
+- XML deserialization
+
+### 7. PATH TRAVERSAL & FILE HANDLING
+- User-controlled file paths
+- Directory traversal (../)
+- Unsafe file uploads (no type/size validation)
+- Symlink attacks
+- Temp file race conditions (TOCTOU)
+
+### 8. SSRF & NETWORK
+- User-controlled URLs in requests
+- Internal metadata endpoint exposure (169.254.169.254)
+- DNS rebinding risks
+- Open redirects
+- Unvalidated redirects and forwards
+
+### 9. XSS & CLIENT-SIDE
+- Reflected XSS
+- Stored XSS
+- DOM-based XSS
+- Missing Content-Security-Policy
+- Dangerous use of innerHTML, document.write
+
+### 10. SENSITIVE DATA EXPOSURE
+- PII in logs (names, emails, passwords, tokens)
+- Sensitive data in error messages / stack traces
+- Debug mode enabled in production
+- Verbose error handling exposing internals
+- Sensitive data in URLs / query parameters
+
+### 11. RACE CONDITIONS & LOGIC FLAWS
+- TOCTOU (time-of-check to time-of-use)
+- Threading issues with shared state
+- Business logic bypass
+- Negative value / integer overflow abuse
+- Price or quantity manipulation paths
+
+### 12. DEPENDENCY & SUPPLY CHAIN
+- Known vulnerable packages (flag outdated imports)
+- Unpinned dependencies
+- Typosquatting risk in package names
+- Unsafe use of third-party code
+
+### 13. CI/CD & INFRASTRUCTURE
+- Secrets in Dockerfile, docker-compose, GitHub Actions YAML
+- Privileged container flags
+- Exposed ports in configs
+- Insecure IaC (Terraform, Ansible, Kubernetes manifests)
+- Misconfigured CORS
+- Missing security headers
+
+### 14. API SECURITY
+- Missing rate limiting
+- Unauthenticated API endpoints
+- Excessive data exposure in API responses
+- GraphQL introspection enabled
+- Mass assignment in REST APIs
+
+### 15. MEMORY & RESOURCE
+- Unbounded resource consumption (DoS risk)
+- Regex DoS (ReDoS) — catastrophic backtracking
+- Large file upload without limits
+- Infinite loops on user input
+
+---
+
+## OUTPUT STRUCTURE
+
+1. **Executive Summary** — total findings by severity
+2. **CVSS-ranked findings table** (markdown)
+3. **Detailed findings** — one section per vulnerability
+4. **ATT&CK TTP mapping table** — vulnerability → TTP
+5. **Remediation priority list** — what to fix first and why
+6. **False positives** — flagged separately with reasoning
+
+---
+
+Analyze exhaustively. Do not skip any file type. Do not summarize away findings. Report every issue found, no matter how minor.
