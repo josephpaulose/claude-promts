@@ -1,153 +1,353 @@
-@workspace You are a world-class AppSec engineer and red team researcher performing an exhaustive, comprehensive SAST audit on this entire codebase. Leave nothing unchecked.
+@workspace You are a world-class AppSec engineer performing 
+exhaustive comprehensive SAST against every CWE relevant to static analysis.
 
-Analyze EVERY file — source code, configs, scripts, Dockerfiles, IaC, CI/CD pipelines, dependency files, and documentation.
+Analyze EVERY source code file in this workspace.
 
 ---
 
 ## REPORTING FORMAT
 
 For each finding:
-- **Vulnerability**: Name + CWE ID + OWASP category
-- **ATT&CK TTP**: Mapped MITRE ATT&CK technique ID and name
-- **File & Line**: Exact path and line number
-- **Severity**: Critical / High / Medium / Low / Informational
-- **CVSS v3 Score**: Estimated base score
-- **Exploitability**: How an attacker would exploit this
-- **Vulnerable Code**: Exact snippet
-- **Fixed Code**: Working remediation example
-- **False Positive Assessment**: Likelihood and reasoning
+- Vulnerability name + CWE ID
+- File path and exact line number
+- Severity: Critical / High / Medium / Low / Info
+- CVSS v3 base score (estimated)
+- Exploitability: how an attacker uses this
+- Vulnerable code snippet
+- Fixed code example
+- False positive likelihood and reasoning
 
 ---
 
-## SCAN SCOPE — analyze ALL of the following:
+## FULL CWE COVERAGE — scan for ALL of the following:
 
-### 1. SECRETS & CREDENTIALS
-- Hardcoded API keys, passwords, tokens, private keys
-- Base64 encoded secrets
-- Secrets in environment variables, .env files, config files
-- AWS/GCP/Azure credentials, JWT secrets
-- SSH private keys, PEM files
+### INJECTION (CWE-74 family)
+CWE-77  — Command Injection
+CWE-78  — OS Command Injection (os.system, subprocess shell=True)
+CWE-89  — SQL Injection (raw queries, ORM misuse, second-order)
+CWE-90  — LDAP Injection
+CWE-91  — XML Injection
+CWE-93  — CRLF Injection
+CWE-94  — Code Injection
+CWE-95  — eval() Injection
+CWE-96  — Static Code Injection
+CWE-97  — Server-Side Include Injection
+CWE-98  — PHP Remote File Inclusion
+CWE-99  — Resource Injection
+CWE-113 — HTTP Response Splitting / Header Injection
+CWE-116 — Improper Encoding or Escaping
+CWE-117 — Log Forging / Log Injection
+CWE-134 — Format String Vulnerability (sprintf, printf misuse)
+CWE-611 — XXE (XML External Entity)
+CWE-643 — XPath Injection
+CWE-917 — JNDI / Expression Language Injection
+CWE-943 — NoSQL Injection (MongoDB, Redis, Elasticsearch)
+
+### XSS — CROSS-SITE SCRIPTING
+CWE-79  — Reflected XSS (user input reflected in response)
+CWE-80  — Basic XSS (improper neutralization)
+CWE-81  — XSS in Error Message
+CWE-82  — XSS in CGI Scripts
+CWE-83  — XSS in Attributes (href, src, style, onclick)
+CWE-84  — XSS in URI Schemes (javascript:, vbscript:)
+CWE-85  — Doubled Character XSS
+CWE-86  — Improper Neutralization of Invalid Characters
+CWE-87  — XSS via Alternate Encoding (unicode, hex, HTML entities)
+
+DOM-based XSS — flag any of:
+- document.write() with user input
+- innerHTML / outerHTML assignment from untrusted data
+- location.href / location.hash used unsanitized
+- eval() on URL parameters or query strings
+- jQuery .html(), .append() with untrusted data
+- window.location, document.referrer used in DOM
+
+Stored XSS — flag any of:
+- User input saved to DB then rendered without encoding
+- Template rendering without escaping
+- {{ variable }} vs escaped {{% %}} in templates
+
+Missing XSS protections — flag if absent:
+- Content-Security-Policy header
+- X-XSS-Protection header
+- Output encoding before render
+- DOMPurify or equivalent sanitization library
+
+### MEMORY SAFETY (C/C++/low-level)
+CWE-119 — Improper Buffer Restriction
+CWE-120 — Classic Buffer Overflow (strcpy, gets, sprintf)
+CWE-121 — Stack-based Buffer Overflow
+CWE-122 — Heap-based Buffer Overflow
+CWE-123 — Write-what-where Condition
+CWE-124 — Buffer Underwrite
+CWE-125 — Out-of-bounds Read
+CWE-126 — Buffer Over-read
+CWE-127 — Buffer Under-read
+CWE-129 — Improper Array Index Validation
+CWE-131 — Incorrect Buffer Size Calculation
+CWE-134 — Format String (printf, sprintf with user input)
+CWE-170 — Improper Null Termination
+CWE-190 — Integer Overflow
+CWE-191 — Integer Underflow
+CWE-193 — Off-by-one Error
+CWE-195 — Signed to Unsigned Conversion Error
+CWE-369 — Divide by Zero
+CWE-401 — Missing Release of Memory (Memory Leak)
+CWE-415 — Double Free
+CWE-416 — Use After Free
+CWE-476 — Null Pointer Dereference
+CWE-562 — Return of Stack Variable Address
+CWE-787 — Out-of-bounds Write
+CWE-788 — Access Past End of Buffer
+CWE-824 — Access of Uninitialized Pointer
+CWE-825 — Expired Pointer Dereference
+
+### CRYPTOGRAPHY
+CWE-261 — Weak Encoding for Password
+CWE-295 — Improper Certificate Validation (verify=False)
+CWE-311 — Missing Encryption of Sensitive Data
+CWE-312 — Cleartext Storage of Sensitive Information
+CWE-313 — Cleartext Storage in a File
+CWE-315 — Cleartext Storage in a Cookie
+CWE-316 — Cleartext Storage in Memory
+CWE-319 — Cleartext Transmission (HTTP instead of HTTPS)
+CWE-321 — Hardcoded Cryptographic Key
+CWE-323 — Reusing a Nonce / IV
+CWE-325 — Missing Required Cryptographic Step
+CWE-326 — Inadequate Encryption Strength
+CWE-327 — Broken or Risky Cryptographic Algorithm (MD5, SHA1, DES, RC4, ECB)
+CWE-328 — Reversible One-Way Hash
+CWE-329 — Not Using a Random IV with CBC Mode
+CWE-330 — Use of Insufficiently Random Values
+CWE-331 — Insufficient Entropy
+CWE-332 — Insufficient Entropy in PRNG
+CWE-333 — Improper Handling of Insufficient Entropy
+CWE-334 — Small Space of Random Values
+CWE-335 — Incorrect Usage of Seeds in PRNG
+CWE-336 — Same Seed in PRNG
+CWE-337 — Predictable Seed in PRNG
+CWE-338 — Use of Cryptographically Weak PRNG (random vs secrets)
+CWE-347 — Improper Verification of JWT Signature
+CWE-916 — Use of Password Hash With Insufficient Computational Effort (MD5/SHA1 for passwords)
+
+### AUTHENTICATION & ACCESS CONTROL
+CWE-284 — Improper Access Control
+CWE-285 — Improper Authorization
+CWE-287 — Improper Authentication
+CWE-288 — Authentication Bypass via Alternate Path
+CWE-290 — Authentication Bypass via Spoofing
+CWE-294 — Authentication Bypass via Capture-Replay
+CWE-302 — Authentication Bypass via Assumed Immutability
+CWE-303 — Incorrect Implementation of Authentication Algorithm
+CWE-304 — Missing Critical Step in Authentication
+CWE-305 — Authentication Bypass by Primary Weakness
+CWE-306 — Missing Authentication for Critical Function
+CWE-307 — Improper Restriction of Excessive Auth Attempts (no brute force lockout)
+CWE-308 — Use of Single-Factor Authentication
+CWE-309 — Use of Password in Configuration File
+CWE-352 — Cross-Site Request Forgery (CSRF)
+CWE-384 — Session Fixation
+CWE-521 — Weak Password Requirements
+CWE-522 — Insufficiently Protected Credentials
+CWE-523 — Unprotected Transport of Credentials
+CWE-549 — Missing Password Field Masking
+CWE-603 — Use of Client-Side Authentication
+CWE-614 — Sensitive Cookie Without Secure Flag / HttpOnly Flag
+CWE-620 — Unverified Password Change
+CWE-640 — Weak Password Recovery Mechanism
+CWE-798 — Use of Hardcoded Credentials
+
+### SECRETS & HARDCODED VALUES
+CWE-259 — Use of Hardcoded Password
+CWE-321 — Use of Hardcoded Cryptographic Key
+CWE-547 — Use of Hardcoded Security-relevant Constants
+CWE-798 — Use of Hardcoded Credentials
+
+Flag all of:
+- API keys, tokens, secrets in source code
+- Base64 encoded embedded credentials
+- Private keys / PEM certificates in code
+- JWT secrets hardcoded
+- AWS/GCP/Azure keys in code
 - Database connection strings with credentials
+- Passwords in comments
 
-### 2. INJECTION VULNERABILITIES
-- SQL injection (raw queries, ORM misuse, second-order SQLi)
-- Command injection (os.system, subprocess, shell=True)
-- SSTI (template injection in Jinja2, Mako, etc.)
-- XXE (XML external entity)
-- LDAP injection
-- XPath injection
-- NoSQL injection (MongoDB, etc.)
-- HTTP header injection
-- Log injection / log forging
-- CRLF injection
+### INFORMATION EXPOSURE
+CWE-200 — Exposure of Sensitive Information
+CWE-201 — Insertion of Sensitive Information into Sent Data
+CWE-202 — Exposure of Sensitive Data via Data Queries
+CWE-203 — Observable Discrepancy
+CWE-204 — Observable Response Discrepancy
+CWE-205 — Observable Behavioral Discrepancy
+CWE-208 — Observable Timing Discrepancy (timing attacks)
+CWE-209 — Generation of Error Message with Sensitive Information
+CWE-210 — Self-generated Error Message
+CWE-211 — Externally-generated Error Message
+CWE-212 — Improper Cross-boundary Removal of Sensitive Data
+CWE-213 — Exposure Due to Incompatible Policies
+CWE-532 — Insertion of Sensitive Information into Log File
+CWE-538 — File and Directory Information Exposure
+CWE-548 — Exposure of Information via Directory Listing
+CWE-598 — Information Exposure Through Query Strings in GET Request
 
-### 3. DANGEROUS FUNCTIONS & SINKS
-- eval(), exec(), compile()
-- pickle, marshal, shelve, yaml.load()
-- subprocess with shell=True
-- os.system(), os.popen()
-- __import__(), importlib misuse
-- ctypes, cffi unsafe usage
-- open() with user-controlled paths
+Flag all of:
+- Stack traces in HTTP responses
+- Debug mode enabled in production
+- PII, tokens, passwords in log statements
+- Verbose error messages leaking internal paths
+- Sensitive data in URL parameters
 
-### 4. AUTHENTICATION & AUTHORIZATION
-- Missing authentication on endpoints
-- Broken access control / IDOR
-- Privilege escalation paths
-- JWT: none algorithm, weak secret, missing expiry
-- OAuth misconfigurations
-- Session fixation / missing session invalidation
-- Insecure remember-me tokens
-- Mass assignment vulnerabilities
+### INPUT VALIDATION & PATH TRAVERSAL
+CWE-20  — Improper Input Validation
+CWE-22  — Path Traversal (../)
+CWE-23  — Relative Path Traversal
+CWE-24  — Path Traversal: '../filedir'
+CWE-25  — Path Traversal: '/../filedir'
+CWE-26  — Path Traversal: '/dir/../filename'
+CWE-27  — Path Traversal: 'dir/../../filename'
+CWE-28  — Path Traversal: '..\filedir' (backslash)
+CWE-29  — Path Traversal: '\..\filename'
+CWE-30  — Path Traversal: '\dir\..\filename'
+CWE-31  — Path Traversal: 'dir\..\..\filename'
+CWE-32  — Path Traversal: '...' (triple dot)
+CWE-33  — Path Traversal: '....' (quad dot)
+CWE-34  — Path Traversal: '....//'
+CWE-35  — Path Traversal: '.../...//'
+CWE-36  — Absolute Path Traversal
+CWE-37  — Path Traversal: '/absolute/pathname/here'
+CWE-38  — Path Traversal: '\absolute\pathname\here'
+CWE-39  — Path Traversal: 'C:\absolute\pathname\here' (Windows)
+CWE-40  — Path Traversal: '\\UNC\share\name'
+CWE-41  — Improper Resolution of Path Equivalence
+CWE-73  — External Control of File Name or Path
+CWE-112 — Missing XML Validation
+CWE-606 — Unchecked Loop Condition
+CWE-1287 — Improper Validation of Specified Type of Input
 
-### 5. CRYPTOGRAPHY
-- Weak algorithms (MD5, SHA1, DES, RC4, ECB mode)
-- Hardcoded IV or salt
-- Insecure random (random vs secrets/os.urandom)
-- Missing certificate validation (verify=False)
-- Weak key sizes
-- Improper padding
+### FILE HANDLING
+CWE-434 — Unrestricted Upload of File with Dangerous Type
+CWE-494 — Download of Code Without Integrity Check
+CWE-22  — ZipSlip (path traversal via zip/tar extraction)
 
-### 6. INSECURE DESERIALIZATION
+Flag all of:
+- No file type validation on upload
+- No file size limits
+- No extension whitelist
+- Archive extraction without path sanitization (ZipSlip)
+- User-controlled filename used in open()
+
+### DESERIALIZATION
+CWE-502 — Deserialization of Untrusted Data
+
+Flag all of:
 - pickle.loads() on untrusted input
 - yaml.load() without SafeLoader
-- jsonpickle misuse
-- Java deserialization equivalents
-- XML deserialization
+- jsonpickle on untrusted data
+- marshal.loads() on untrusted input
+- shelve with untrusted keys
+- Java native deserialization
+- XML deserialization without validation
 
-### 7. PATH TRAVERSAL & FILE HANDLING
-- User-controlled file paths
-- Directory traversal (../)
-- Unsafe file uploads (no type/size validation)
-- Symlink attacks
-- Temp file race conditions (TOCTOU)
+### SSRF & REDIRECTS
+CWE-918 — Server-Side Request Forgery (SSRF)
+CWE-601 — Open Redirect
 
-### 8. SSRF & NETWORK
-- User-controlled URLs in requests
-- Internal metadata endpoint exposure (169.254.169.254)
-- DNS rebinding risks
-- Open redirects
-- Unvalidated redirects and forwards
+Flag all of:
+- User-controlled URLs passed to requests/urllib/httpx
+- No allowlist for outbound URLs
+- Internal metadata endpoint reachable (169.254.169.254)
+- DNS rebinding risk
+- Unvalidated redirect destinations
 
-### 9. XSS & CLIENT-SIDE
-- Reflected XSS
-- Stored XSS
-- DOM-based XSS
-- Missing Content-Security-Policy
-- Dangerous use of innerHTML, document.write
+### RESOURCE MANAGEMENT & DOS
+CWE-400 — Uncontrolled Resource Consumption
+CWE-404 — Improper Resource Shutdown or Release
+CWE-459 — Incomplete Cleanup
+CWE-770 — Allocation of Resources Without Limits or Throttling
+CWE-771 — Missing Reference to Active Allocated Resource
+CWE-772 — Missing Release of Resource After Effective Lifetime
+CWE-774 — Allocation of File Descriptors Without Limits
+CWE-835 — Loop with Unreachable Exit Condition (Infinite Loop)
+CWE-1333 — Inefficient Regular Expression (ReDoS)
 
-### 10. SENSITIVE DATA EXPOSURE
-- PII in logs (names, emails, passwords, tokens)
-- Sensitive data in error messages / stack traces
-- Debug mode enabled in production
-- Verbose error handling exposing internals
-- Sensitive data in URLs / query parameters
+Flag all of:
+- Unbounded file upload size
+- No pagination on large data queries
+- Regex with catastrophic backtracking
+- File descriptors not closed
+- Infinite loop possible on user input
 
-### 11. RACE CONDITIONS & LOGIC FLAWS
-- TOCTOU (time-of-check to time-of-use)
-- Threading issues with shared state
-- Business logic bypass
-- Negative value / integer overflow abuse
-- Price or quantity manipulation paths
+### RACE CONDITIONS & LOGIC FLAWS
+CWE-362 — Race Condition (RACF)
+CWE-366 — Race Condition in Switch
+CWE-367 — TOCTOU (Time-of-Check Time-of-Use)
+CWE-370 — Missing Check After Resolution
+CWE-672 — Operation on Resource After Expiration
+CWE-674 — Uncontrolled Recursion
 
-### 12. DEPENDENCY & SUPPLY CHAIN
-- Known vulnerable packages (flag outdated imports)
-- Unpinned dependencies
-- Typosquatting risk in package names
-- Unsafe use of third-party code
+Flag all of:
+- File existence check then use without lock
+- Shared mutable state across threads
+- Business logic bypass via timing
+- Integer overflow in price/quantity fields
+- Second-order injection (stored then executed)
 
-### 13. CI/CD & INFRASTRUCTURE
-- Secrets in Dockerfile, docker-compose, GitHub Actions YAML
-- Privileged container flags
-- Exposed ports in configs
-- Insecure IaC (Terraform, Ansible, Kubernetes manifests)
-- Misconfigured CORS
-- Missing security headers
-
-### 14. API SECURITY
-- Missing rate limiting
-- Unauthenticated API endpoints
-- Excessive data exposure in API responses
-- GraphQL introspection enabled
-- Mass assignment in REST APIs
-
-### 15. MEMORY & RESOURCE
-- Unbounded resource consumption (DoS risk)
-- Regex DoS (ReDoS) — catastrophic backtracking
-- Large file upload without limits
-- Infinite loops on user input
+### CODE QUALITY & LOGIC ERRORS
+CWE-480 — Use of Incorrect Operator
+CWE-481 — Assigning Instead of Comparing (= vs ==)
+CWE-482 — Comparing Instead of Assigning
+CWE-483 — Incorrect Block Delimitation
+CWE-484 — Omitted Break Statement in Switch
+CWE-486 — Comparison of Classes by Name
+CWE-561 — Dead Code
+CWE-563 — Unused Variable Assignment
+CWE-570 — Expression is Always False
+CWE-571 — Expression is Always True
+CWE-672 — Operation After Expiration or Release
+CWE-690 — Unchecked Return Value to NULL Pointer Dereference
+CWE-704 — Incorrect Type Conversion or Cast
+CWE-758 — Reliance on Undefined Behavior
 
 ---
 
 ## OUTPUT STRUCTURE
 
-1. **Executive Summary** — total findings by severity
-2. **CVSS-ranked findings table** (markdown)
-3. **Detailed findings** — one section per vulnerability
-4. **ATT&CK TTP mapping table** — vulnerability → TTP
-5. **Remediation priority list** — what to fix first and why
-6. **False positives** — flagged separately with reasoning
+### Section 1 — Executive Summary
+- Total findings by severity (Critical / High / Medium / Low / Info)
+- Top 5 most critical issues
+- Overall risk rating
+
+### Section 2 — CVSS-Ranked Findings Table
+| # | Vulnerability | CWE | File | Line | Severity | CVSS |
+|---|---|---|---|---|---|---|
+
+### Section 3 — Detailed Findings
+For each finding:
+**[SEVERITY] CWE-XXX — Vulnerability Name**
+- File: path/to/file.py:line
+- CVSS: X.X
+- Exploitability: ...
+- Vulnerable Code:
+
+
+[exact snippet]
+
+- Fixed Code:
+
+
+[working fix]
+
+- False Positive Assessment: Low/Medium/High — reasoning
+
+### Section 4 — False Positives
+List all suspected false positives separately with reasoning
+
+### Section 5 — Remediation Priority
+Top 10 fixes ranked by risk, effort, and impact
 
 ---
 
-Analyze exhaustively. Do not skip any file type. Do not summarize away findings. Report every issue found, no matter how minor.
+Analyze source code only. Every file. Every CWE listed above.
+Report ALL findings including Informational severity.
+Do not skip any file. Do not summarize away any issue.
+Flag every instance even if repeated across files.​​​​​​​​​
